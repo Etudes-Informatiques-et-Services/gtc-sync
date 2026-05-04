@@ -2,6 +2,7 @@ import { normalizePath, TFolder, Notice, Plugin, PluginSettingTab, Setting, TAbs
 import { VaultApi } from "./vaultApi";
 import { WebSocketClient, ConnectionStatus } from "./websocketClient";
 import { AlertModal } from "./alertModal";
+import { t } from "./i18n";
 
 
 interface GTCSyncSettings {
@@ -50,10 +51,10 @@ export default class GTCSyncPlugin extends Plugin {
       "auth-error": "shield-off",
     };
     const tooltips: Record<ConnectionStatus, string> = {
-      connecting: "GTC-Sync : Connexion en cours…",
-      connected: "GTC-Sync : Connecté",
-      disconnected: "GTC-Sync : Déconnecté (reconnexion auto)",
-      "auth-error": "GTC-Sync : Erreur d'authentification",
+      connecting: t("statusConnecting"),
+      connected: t("statusConnected"),
+      disconnected: t("statusDisconnected"),
+      "auth-error": t("statusAuthError"),
     };
 
     this.statusBarEl.setText("GTC-Sync : ●");
@@ -73,11 +74,11 @@ export default class GTCSyncPlugin extends Plugin {
 
     new AlertModal(
       this.app,
-      "GTC-Sync : Déconnecté",
-      "Le plugin n'est pas connecté au serveur GTC-Sync.\nLes modifications ne seront pas synchronisées.",
+      t("modalDisconnectedTitle"),
+      t("modalDisconnectedMessage"),
       "warning",
       {
-        label: "Reconnecter",
+        label: t("btnReconnect"),
         onClick: () => this.startWebSocket(),
       },
       () => { this.disconnectedModalOpen = false; },
@@ -87,11 +88,11 @@ export default class GTCSyncPlugin extends Plugin {
   onSessionReplaced(): void {
     new AlertModal(
       this.app,
-      "GTC-Sync : Attention",
-      "La connexion a été fermée car une autre session GTC-Sync vient de se connecter.",
+      t("modalSessionReplacedTitle"),
+      t("modalSessionReplacedMessage"),
       "warning",
       {
-        label: "Reconnecter",
+        label: t("btnReconnect"),
         onClick: () => this.startWebSocket(),
       },
     ).open();
@@ -106,14 +107,14 @@ export default class GTCSyncPlugin extends Plugin {
     this.statusBarEl.addClass("gtc-sync-status");
 
     // ribbonStatusEl doit être créé avant le premier appel à setConnectionStatus.
-    this.ribbonStatusEl = this.addRibbonIcon("wifi-off", "GTC-Sync : Déconnecté (reconnexion auto)", () => {});
+    this.ribbonStatusEl = this.addRibbonIcon("wifi-off", t("statusDisconnected"), () => { });
     this.ribbonStatusEl.addClass("gtc-sync-ribbon-status");
 
     this.setConnectionStatus("disconnected");
 
     this.addSettingTab(new GTCSyncPluginSettingTab(this.app, this));
 
-    this.addRibbonIcon("square-pen", "Créer une note rapide", async () => {
+    this.addRibbonIcon("square-pen", t("ribbonQuickNote"), async () => {
       await this.createQuickNote();
     });
 
@@ -121,7 +122,7 @@ export default class GTCSyncPlugin extends Plugin {
       this.app.workspace.on("file-menu", (menu, file) => {
         menu.addItem((item) => {
           item
-            .setTitle("Créer une note rapide")
+            .setTitle(t("menuCreateQuickNote"))
             .setIcon("square-pen")
             .onClick(async () => {
               await this.createQuickNote(file);
@@ -134,7 +135,7 @@ export default class GTCSyncPlugin extends Plugin {
       this.app.workspace.on("file-menu", (menu, file) => {
         menu.addItem((item) => {
           item
-            .setTitle("Envoyer dans note rapide")
+            .setTitle(t("menuSendToQuickNote"))
             .setIcon("send")
             .onClick(async () => {
               await this.sendToQuickNote(file);
@@ -203,7 +204,7 @@ export default class GTCSyncPlugin extends Plugin {
 
     this.addCommand({
       id: "create-quick-note",
-      name: "Créer une note rapide",
+      name: t("cmdCreateQuickNote"),
       callback: async () => {
         await this.createQuickNote();
       },
@@ -211,19 +212,19 @@ export default class GTCSyncPlugin extends Plugin {
 
     this.addCommand({
       id: "connect-websocket",
-      name: "Connect WebSocket",
+      name: t("cmdConnectWebSocket"),
       callback: async () => {
         await this.startWebSocket();
-        new Notice("WebSocket connecté");
+        new Notice(t("noticeWsConnected"));
       },
     });
 
     this.addCommand({
       id: "disconnect-websocket",
-      name: "Disconnect WebSocket",
+      name: t("cmdDisconnectWebSocket"),
       callback: async () => {
         await this.stopWebSocket();
-        new Notice("WebSocket déconnecté");
+        new Notice(t("noticeWsDisconnected"));
       },
     });
 
@@ -248,14 +249,14 @@ export default class GTCSyncPlugin extends Plugin {
       if (!(target instanceof TFile)) return;
 
       if (!this.wsClient) {
-        throw new Error("WebSocket non initialisé");
+        throw new Error(t("errWsNotInit"));
       }
 
       const idNote = await this.wsClient.getNoteId();
       await this.setFrontmatterProperty(target, "IdNote", idNote);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new Notice(`Impossible de synchroniser la note rapide : ${message}`, 8000);
+      new Notice(t("noticeSendToQuickNoteFailed", { message }), 8000);
       console.error("[GTCSyncPlugin] sendToQuickNote error:", error);
     }
   }
@@ -263,7 +264,7 @@ export default class GTCSyncPlugin extends Plugin {
   async createQuickNote(target?: TAbstractFile): Promise<void> {
     try {
       if (!this.wsClient) {
-        throw new Error("WebSocket non initialisé");
+        throw new Error(t("errWsNotInit"));
       }
 
       const idNote = await this.wsClient.getNoteId();
@@ -279,11 +280,11 @@ export default class GTCSyncPlugin extends Plugin {
       }, 2000);
 
       const createdFile = await this.app.vault.create(fullPath, content);
-      new Notice(`Note rapide créée : ${createdFile.path}`);
+      new Notice(t("noticeQuickNoteCreated", { path: createdFile.path }));
       await this.app.workspace.getLeaf(true).openFile(createdFile);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new Notice(`Impossible de créer la note rapide : ${message}`, 8000);
+      new Notice(t("noticeQuickNoteFailed", { message }), 8000);
       console.error("[GTCSyncPlugin] createQuickNote error:", error);
     }
   }
@@ -343,36 +344,49 @@ export default class GTCSyncPlugin extends Plugin {
 
       this.debugLog("note.saved ←", response);
       if (typeof response !== "object" || response === null) {
-        throw new Error("Réponse invalide pour note.saved");
+        throw new Error(t("errInvalidResponseSave"));
       }
 
       const result = (response as Record<string, unknown>).result;
       if (typeof result !== "object" || result === null) {
-        throw new Error("Résultat invalide pour note.saved");
+        throw new Error(t("errInvalidResultSave"));
       }
 
       const resultObj = result as Record<string, unknown>;
       if (resultObj.Type === "Error") {
-        if (String(resultObj.Code) === "74") {
-          new AlertModal(
-            this.app,
-            "GTC-Sync : Attention",
-            "La note est réservée par un autre utilisateur,\nles modifications peuvent être perdues !",
-          ).open();
-        } else {
-          new AlertModal(
-            this.app,
-            "GTC-Sync : Attention",
-            "Erreur " + String(resultObj.Code) + " : " + String(resultObj.Message ?? ""),
-          ).open();
+        this.debugLog("note.saved ←", resultObj);
+
+        switch (String(resultObj.Code)) {
+          case "74":
+            new AlertModal(
+              this.app,
+              t("modalSaveErrorTitle"),
+              t("modalNoteReservedMessage"),
+            ).open();
+            break;
+          case "78":
+            new AlertModal(
+              this.app,
+              t("modalSaveErrorTitle"),
+              t("modalNoteUnexistingMessage"),
+            ).open();
+            break;
+          default:
+            new AlertModal(
+              this.app,
+              t("modalSaveErrorTitle"),
+              t("modalErrorMessage", { code: String(resultObj.Code), message: String(resultObj.Message ?? "") }),
+            ).open();
         }
         return;
       }
 
-      new Notice("La note a été synchronisée.");
+
+
+      new Notice(t("noteSynced"));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new Notice(`GTC-Sync : échec de la synchronisation — ${message}`, 8000);
+      new Notice(t("noticeSyncFailed", { message }), 8000);
       console.error("[GTCSyncPlugin] Erreur handleFileModified:", error);
     }
   }
@@ -426,8 +440,8 @@ class GTCSyncPluginSettingTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-      .setName("WebSocket URL")
-      .setDesc("Adresse du serveur WebSocket")
+      .setName(t("settingsUrlName"))
+      .setDesc(t("settingsUrlDesc"))
       .addText((text) =>
         text
           .setPlaceholder("ws://127.0.0.1:8080")
@@ -440,8 +454,8 @@ class GTCSyncPluginSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("WebSocket token")
-      .setDesc("Token envoyé au serveur après connexion")
+      .setName(t("settingsTokenName"))
+      .setDesc(t("settingsTokenDesc"))
       .addText((text) =>
         text
           .setPlaceholder("token")
@@ -454,8 +468,8 @@ class GTCSyncPluginSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Auto connect")
-      .setDesc("Se reconnecter automatiquement au chargement du plugin")
+      .setName(t("settingsAutoConnectName"))
+      .setDesc(t("settingsAutoConnectDesc"))
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.autoConnect)
@@ -466,8 +480,8 @@ class GTCSyncPluginSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Mode debug")
-      .setDesc("Affiche les logs détaillés dans la console du développeur (F12)")
+      .setName(t("settingsDebugName"))
+      .setDesc(t("settingsDebugDesc"))
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.debug)

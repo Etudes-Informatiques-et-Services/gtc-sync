@@ -2,6 +2,7 @@ import { VaultApi } from "./vaultApi";
 import { CommandRequest, CommandResponse } from "./types";
 import { Notice, App } from "obsidian";
 import { AlertModal } from "./alertModal";
+import { t } from "./i18n";
 
 export type ConnectionStatus = "connecting" | "connected" | "disconnected" | "auth-error";
 
@@ -50,7 +51,7 @@ export class WebSocketClient {
       window.clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-    this.rejectPendingRequests("WebSocket fermé");
+    this.rejectPendingRequests(t("errWsClosed"));
     if (this.ws) {
       this.ws.close();
       this.ws = null;
@@ -58,15 +59,15 @@ export class WebSocketClient {
   }
 
   private connect(): void {
-    this.debugLog?.("connexion à", this.url);
+    this.debugLog?.(t("debugConnecting"), this.url);
     this.onStatusChange?.("connecting");
     const ws = new WebSocket(this.url);
     this.ws = ws;
 
     ws.onopen = () => {
-      this.debugLog?.("socket ouverte");
+      this.debugLog?.(t("debugSocketOpen"));
       if (this.token) {
-        this.debugLog?.("envoi auth");
+        this.debugLog?.(t("debugSendAuth"));
         ws.send(JSON.stringify({ type: "auth", token: this.token }));
       } else {
         this.onStatusChange?.("connected");
@@ -80,7 +81,7 @@ export class WebSocketClient {
         this.debugLog?.("↓", parsed);
 
         if (parsed.type === "auth.ok") {
-          this.debugLog?.("authentification OK");
+          this.debugLog?.(t("debugAuthOk"));
           this.onStatusChange?.("connected");
           return;
         }
@@ -105,7 +106,7 @@ export class WebSocketClient {
           this.pendingRequests.delete(parsed.id);
 
           if (parsed.ok === false) {
-            pending.reject(new Error(typeof parsed.error === "string" ? parsed.error : "Erreur inconnue"));
+            pending.reject(new Error(typeof parsed.error === "string" ? parsed.error : t("errUnknown")));
             return;
           }
 
@@ -120,7 +121,7 @@ export class WebSocketClient {
         ws.send(JSON.stringify(response));
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        new Notice(`GTC-Sync : erreur de traitement du message — ${message}`, 8000);
+        new Notice(t("noticeMessageError", { message }), 8000);
         ws.send(JSON.stringify({ id: "unknown", ok: false, error: message }));
       }
     };
@@ -131,7 +132,7 @@ export class WebSocketClient {
 
     ws.onclose = () => {
       console.warn("[WS] connexion fermée");
-      this.rejectPendingRequests("Connexion WebSocket fermée");
+      this.rejectPendingRequests(t("errWsConnClosed"));
       if (this.sessionReplaced) {
         this.onStatusChange?.("disconnected");
         this.onSessionReplaced?.();
@@ -139,7 +140,7 @@ export class WebSocketClient {
       }
       this.onStatusChange?.("disconnected");
       if (this.running) {
-        this.debugLog?.("reconnexion dans 3 s");
+        this.debugLog?.(t("debugReconnecting"));
         this.reconnectTimer = window.setTimeout(() => this.connect(), 3000);
       }
     };
@@ -175,17 +176,17 @@ export class WebSocketClient {
     const response = await this.request("note.getId");
 
     if (typeof response !== "object" || response === null) {
-      throw new Error("Réponse invalide pour note.getId");
+      throw new Error(t("errInvalidResponseGetId"));
     }
 
     const result = (response as Record<string, unknown>).result;
     if (typeof result !== "object" || result === null) {
-      throw new Error("Résultat invalide pour note.getId");
+      throw new Error(t("errInvalidResultGetId"));
     }
 
     const idNote = (result as Record<string, unknown>).idNote;
     if (typeof idNote !== "string" || !idNote.trim()) {
-      throw new Error("idNote manquant dans la réponse");
+      throw new Error(t("errMissingIdNote"));
     }
 
     return idNote;
@@ -193,7 +194,7 @@ export class WebSocketClient {
 
   public async request(type: string, payload?: Record<string, unknown>): Promise<unknown> {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      throw new Error("WebSocket non connecté");
+      throw new Error(t("errWsNotConnected"));
     }
 
     const id = this.generateRequestId();
@@ -201,7 +202,7 @@ export class WebSocketClient {
     return new Promise((resolve, reject) => {
       const timeout = window.setTimeout(() => {
         this.pendingRequests.delete(id);
-        reject(new Error(`Timeout en attente de réponse pour ${type}`));
+        reject(new Error(t("errWsTimeout", { type })));
       }, 10000);
 
       const message = { id, type, ...(payload ?? {}) };
@@ -213,13 +214,13 @@ export class WebSocketClient {
 
   private parseCommand(value: unknown): CommandRequest {
     if (typeof value !== "object" || value === null) {
-      throw new Error("Message invalide: objet attendu");
+      throw new Error(t("errInvalidMessage"));
     }
 
     const obj = value as Record<string, unknown>;
 
     if (typeof obj.id !== "string") {
-      throw new Error("Message invalide: id manquant");
+      throw new Error(t("errMissingId"));
     }
 
     if (obj.type === "check") {
@@ -227,44 +228,44 @@ export class WebSocketClient {
     }
 
     if (obj.type === "note.read") {
-      if (typeof obj.path !== "string") throw new Error("note.read: path manquant");
+      if (typeof obj.path !== "string") throw new Error(t("errMissingPath", { type: "note.read" }));
       return { id: obj.id, type: "note.read", path: obj.path };
     }
 
     if (obj.type === "note.create") {
-      if (typeof obj.path !== "string") throw new Error("note.create: path manquant");
-      if (!Array.isArray(obj.content)) throw new Error("note.create: content manquant");
+      if (typeof obj.path !== "string") throw new Error(t("errMissingPath", { type: "note.create" }));
+      if (!Array.isArray(obj.content)) throw new Error(t("errMissingContent", { type: "note.create" }));
       return { id: obj.id, type: "note.create", path: obj.path, content: obj.content };
     }
 
     if (obj.type === "note.replace") {
-      if (typeof obj.path !== "string") throw new Error("note.replace: path manquant");
-      if (!Array.isArray(obj.content)) throw new Error("note.replace: content manquant");
+      if (typeof obj.path !== "string") throw new Error(t("errMissingPath", { type: "note.replace" }));
+      if (!Array.isArray(obj.content)) throw new Error(t("errMissingContent", { type: "note.replace" }));
       return { id: obj.id, type: "note.replace", path: obj.path, content: obj.content };
     }
 
     if (obj.type === "note.move") {
       if (typeof obj.path !== "string" || typeof obj.newPath !== "string") {
-        throw new Error("note.move: path manquant");
+        throw new Error(t("errMissingPath", { type: "note.move" }));
       }
       return { id: obj.id, type: "note.move", path: obj.path, newPath: obj.newPath };
     }
 
     if (obj.type === "note.findByProperty") {
-      if (typeof obj.property !== "string") throw new Error("note.findByProperty: property manquant");
+      if (typeof obj.property !== "string") throw new Error(t("errMissingProperty"));
       const val = obj.value;
       if (typeof val !== "string" && typeof val !== "number" && typeof val !== "boolean") {
-        throw new Error("note.findByProperty: value invalide");
+        throw new Error(t("errInvalidValue"));
       }
       return { id: obj.id, type: "note.findByProperty", property: obj.property, value: val };
     }
 
     if (obj.type === "note.open") {
-      if (typeof obj.path !== "string") throw new Error("note.open: path manquant");
+      if (typeof obj.path !== "string") throw new Error(t("errMissingPath", { type: "note.open" }));
       return { id: obj.id, type: "note.open", path: obj.path };
     }
 
-    throw new Error(`Type de commande inconnu: ${String(obj.type)}`);
+    throw new Error(t("errUnknownCommand", { type: String(obj.type) }));
   }
 
   private async executeCommand(command: CommandRequest): Promise<CommandResponse> {
@@ -312,7 +313,7 @@ export class WebSocketClient {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new Notice(`GTC-Sync : échec de ${command.type} — ${message}`, 8000);
+      new Notice(t("noticeCommandFailed", { type: command.type, message }), 8000);
       return { id: command.id, ok: false, error: message };
     }
   }

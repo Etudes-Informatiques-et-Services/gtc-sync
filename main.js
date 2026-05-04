@@ -26,6 +26,175 @@ var import_obsidian4 = require("obsidian");
 
 // src/vaultApi.ts
 var import_obsidian = require("obsidian");
+
+// src/i18n.ts
+var fr = {
+  // Statut de connexion
+  statusConnecting: "GTC-Sync : Connexion en cours\u2026",
+  statusConnected: "GTC-Sync : Connect\xE9",
+  statusDisconnected: "GTC-Sync : D\xE9connect\xE9 (reconnexion auto)",
+  statusAuthError: "GTC-Sync : Erreur d'authentification",
+  // Ribbon & menus
+  ribbonQuickNote: "Cr\xE9er une note rapide",
+  menuCreateQuickNote: "Cr\xE9er une note rapide",
+  menuSendToQuickNote: "Envoyer dans note rapide",
+  // Commandes
+  cmdCreateQuickNote: "Cr\xE9er une note rapide",
+  cmdConnectWebSocket: "Connect WebSocket",
+  cmdDisconnectWebSocket: "Disconnect WebSocket",
+  // Modales
+  modalDisconnectedTitle: "GTC-Sync : D\xE9connect\xE9",
+  modalDisconnectedMessage: "Le plugin n'est pas connect\xE9 au serveur GTC-Sync.\nLes modifications ne seront pas synchronis\xE9es.",
+  modalSessionReplacedTitle: "GTC-Sync : Attention",
+  modalSessionReplacedMessage: "La connexion a \xE9t\xE9 ferm\xE9e car une autre session GTC-Sync vient de se connecter.",
+  modalSaveErrorTitle: "GTC-Sync : Attention",
+  modalNoteReservedMessage: "La note est r\xE9serv\xE9e par un autre utilisateur,\nles modifications peuvent \xEAtre perdues !",
+  modalNoteUnexistingMessage: "Cette note n'existe plus.",
+  modalErrorMessage: "Erreur {code} : {message}",
+  // Boutons
+  btnReconnect: "Reconnecter",
+  // Notices
+  noteSynced: "La note a \xE9t\xE9 synchronis\xE9e.",
+  noticeQuickNoteCreated: "Note rapide cr\xE9\xE9e : {path}",
+  noticeQuickNoteFailed: "Impossible de cr\xE9er la note rapide : {message}",
+  noticeSendToQuickNoteFailed: "Impossible de synchroniser la note rapide : {message}",
+  noticeWsConnected: "WebSocket connect\xE9",
+  noticeWsDisconnected: "WebSocket d\xE9connect\xE9",
+  noticeSyncFailed: "GTC-Sync : \xE9chec de la synchronisation \u2014 {message}",
+  noticeMessageError: "GTC-Sync : erreur de traitement du message \u2014 {message}",
+  noticeCommandFailed: "GTC-Sync : \xE9chec de {type} \u2014 {message}",
+  // Paramètres
+  settingsUrlName: "WebSocket URL",
+  settingsUrlDesc: "Adresse du serveur WebSocket",
+  settingsTokenName: "WebSocket token",
+  settingsTokenDesc: "Token envoy\xE9 au serveur apr\xE8s connexion",
+  settingsAutoConnectName: "Auto connect",
+  settingsAutoConnectDesc: "Se reconnecter automatiquement au chargement du plugin",
+  settingsDebugName: "Mode debug",
+  settingsDebugDesc: "Affiche les logs d\xE9taill\xE9s dans la console du d\xE9veloppeur (F12)",
+  // Debug
+  debugConnecting: "connexion \xE0",
+  debugSocketOpen: "socket ouverte",
+  debugSendAuth: "envoi auth",
+  debugAuthOk: "authentification OK",
+  debugReconnecting: "reconnexion dans 3 s",
+  // Erreurs
+  errWsNotInit: "WebSocket non initialis\xE9",
+  errWsClosed: "WebSocket ferm\xE9",
+  errWsConnClosed: "Connexion WebSocket ferm\xE9e",
+  errWsNotConnected: "WebSocket non connect\xE9",
+  errWsTimeout: "Timeout en attente de r\xE9ponse pour {type}",
+  errInvalidResponseGetId: "R\xE9ponse invalide pour note.getId",
+  errInvalidResultGetId: "R\xE9sultat invalide pour note.getId",
+  errMissingIdNote: "idNote manquant dans la r\xE9ponse",
+  errInvalidResponseSave: "R\xE9ponse invalide pour note.saved",
+  errInvalidResultSave: "R\xE9sultat invalide pour note.saved",
+  errUnknown: "Erreur inconnue",
+  errInvalidMessage: "Message invalide : objet attendu",
+  errMissingId: "Message invalide : id manquant",
+  errMissingPath: "{type} : path manquant",
+  errMissingContent: "{type} : content manquant",
+  errMissingProperty: "note.findByProperty : property manquant",
+  errInvalidValue: "note.findByProperty : value invalide",
+  errUnknownCommand: "Type de commande inconnu : {type}",
+  errFileNotFound: "Fichier introuvable : {path}",
+  errFileAlreadyExists: "Le fichier existe d\xE9j\xE0 : {path}",
+  errEmptyNoteName: "Nom de note vide",
+  errNoteNotFound: "Note introuvable : {name}",
+  errMultipleNotes: "Plusieurs notes portent ce nom : {name} ({paths})"
+};
+var en = {
+  // Connection status
+  statusConnecting: "GTC-Sync: Connecting\u2026",
+  statusConnected: "GTC-Sync: Connected",
+  statusDisconnected: "GTC-Sync: Disconnected (auto-reconnect)",
+  statusAuthError: "GTC-Sync: Authentication error",
+  // Ribbon & menus
+  ribbonQuickNote: "Create quick note",
+  menuCreateQuickNote: "Create quick note",
+  menuSendToQuickNote: "Send to quick note",
+  // Commands
+  cmdCreateQuickNote: "Create quick note",
+  cmdConnectWebSocket: "Connect WebSocket",
+  cmdDisconnectWebSocket: "Disconnect WebSocket",
+  // Modals
+  modalDisconnectedTitle: "GTC-Sync: Disconnected",
+  modalDisconnectedMessage: "The plugin is not connected to the GTC-Sync server.\nChanges will not be synchronized.",
+  modalSessionReplacedTitle: "GTC-Sync: Warning",
+  modalSessionReplacedMessage: "The connection was closed because another GTC-Sync session just connected.",
+  modalSaveErrorTitle: "GTC-Sync: Warning",
+  modalNoteReservedMessage: "This note is reserved by another user,\nchanges may be lost!",
+  modalNoteUnexistingMessage: "This note does not exist anymore.",
+  modalErrorMessage: "Error {code}: {message}",
+  // Buttons
+  btnReconnect: "Reconnect",
+  // Notices
+  noteSynced: "Note synchronized.",
+  noticeQuickNoteCreated: "Quick note created: {path}",
+  noticeQuickNoteFailed: "Could not create quick note: {message}",
+  noticeSendToQuickNoteFailed: "Could not link quick note: {message}",
+  noticeWsConnected: "WebSocket connected",
+  noticeWsDisconnected: "WebSocket disconnected",
+  noticeSyncFailed: "GTC-Sync: sync failed \u2014 {message}",
+  noticeMessageError: "GTC-Sync: message processing error \u2014 {message}",
+  noticeCommandFailed: "GTC-Sync: {type} failed \u2014 {message}",
+  // Settings
+  settingsUrlName: "WebSocket URL",
+  settingsUrlDesc: "WebSocket server address",
+  settingsTokenName: "WebSocket token",
+  settingsTokenDesc: "Token sent to the server after connecting",
+  settingsAutoConnectName: "Auto connect",
+  settingsAutoConnectDesc: "Automatically connect when the plugin loads",
+  settingsDebugName: "Debug mode",
+  settingsDebugDesc: "Show detailed logs in the developer console (F12)",
+  // Debug
+  debugConnecting: "connecting to",
+  debugSocketOpen: "socket open",
+  debugSendAuth: "sending auth",
+  debugAuthOk: "authentication OK",
+  debugReconnecting: "reconnecting in 3 s",
+  // Errors
+  errWsNotInit: "WebSocket not initialized",
+  errWsClosed: "WebSocket closed",
+  errWsConnClosed: "WebSocket connection closed",
+  errWsNotConnected: "WebSocket not connected",
+  errWsTimeout: "Timeout waiting for response to {type}",
+  errInvalidResponseGetId: "Invalid response for note.getId",
+  errInvalidResultGetId: "Invalid result for note.getId",
+  errMissingIdNote: "idNote missing from response",
+  errInvalidResponseSave: "Invalid response for note.saved",
+  errInvalidResultSave: "Invalid result for note.saved",
+  errUnknown: "Unknown error",
+  errInvalidMessage: "Invalid message: object expected",
+  errMissingId: "Invalid message: missing id",
+  errMissingPath: "{type}: missing path",
+  errMissingContent: "{type}: missing content",
+  errMissingProperty: "note.findByProperty: missing property",
+  errInvalidValue: "note.findByProperty: invalid value",
+  errUnknownCommand: "Unknown command type: {type}",
+  errFileNotFound: "File not found: {path}",
+  errFileAlreadyExists: "File already exists: {path}",
+  errEmptyNoteName: "Empty note name",
+  errNoteNotFound: "Note not found: {name}",
+  errMultipleNotes: "Multiple notes share this name: {name} ({paths})"
+};
+var translations = { fr, en };
+function detectLang() {
+  const locale = window.moment?.locale?.() ?? navigator.language ?? "en";
+  return locale.startsWith("fr") ? "fr" : "en";
+}
+function t(key, vars) {
+  const dict = translations[detectLang()];
+  let str = dict[key];
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      str = str.replace(`{${k}}`, v);
+    }
+  }
+  return str;
+}
+
+// src/vaultApi.ts
 var VaultApi = class {
   constructor(app) {
     this.app = app;
@@ -33,7 +202,7 @@ var VaultApi = class {
   getFileByPath(path) {
     const file = this.app.vault.getAbstractFileByPath(path);
     if (!(file instanceof import_obsidian.TFile)) {
-      throw new Error(`Fichier introuvable: ${path}`);
+      throw new Error(t("errFileNotFound", { path }));
     }
     return file;
   }
@@ -53,7 +222,7 @@ var VaultApi = class {
   }
   async createNote(path, content) {
     if (this.app.vault.getAbstractFileByPath(path)) {
-      throw new Error(`Le fichier existe d\xE9j\xE0: ${path}`);
+      throw new Error(t("errFileAlreadyExists", { path }));
     }
     await this.app.vault.create(path, this.clearText(content.join("\n")));
     return { path };
@@ -71,7 +240,7 @@ var VaultApi = class {
   async openNote(name) {
     const normalizedName = name.trim().toLowerCase();
     if (!normalizedName) {
-      throw new Error("Nom de note vide");
+      throw new Error(t("errEmptyNoteName"));
     }
     const matches = this.app.vault.getMarkdownFiles().filter((f) => {
       const basename = f.basename.trim().toLowerCase();
@@ -80,12 +249,10 @@ var VaultApi = class {
       return basename === normalizedName || filename === normalizedName || path === normalizedName + ".md";
     });
     if (matches.length === 0) {
-      throw new Error(`Note introuvable: ${name}`);
+      throw new Error(t("errNoteNotFound", { name }));
     }
     if (matches.length > 1) {
-      throw new Error(
-        `Plusieurs notes portent ce nom: ${name} (${matches.map((f) => f.path).join(", ")})`
-      );
+      throw new Error(t("errMultipleNotes", { name, paths: matches.map((f) => f.path).join(", ") }));
     }
     await this.app.workspace.getLeaf(true).openFile(matches[0]);
     return { path: matches[0].path };
@@ -143,21 +310,21 @@ var WebSocketClient = class {
       window.clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-    this.rejectPendingRequests("WebSocket ferm\xE9");
+    this.rejectPendingRequests(t("errWsClosed"));
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
   }
   connect() {
-    this.debugLog?.("connexion \xE0", this.url);
+    this.debugLog?.(t("debugConnecting"), this.url);
     this.onStatusChange?.("connecting");
     const ws = new WebSocket(this.url);
     this.ws = ws;
     ws.onopen = () => {
-      this.debugLog?.("socket ouverte");
+      this.debugLog?.(t("debugSocketOpen"));
       if (this.token) {
-        this.debugLog?.("envoi auth");
+        this.debugLog?.(t("debugSendAuth"));
         ws.send(JSON.stringify({ type: "auth", token: this.token }));
       } else {
         this.onStatusChange?.("connected");
@@ -169,7 +336,7 @@ var WebSocketClient = class {
         const parsed = JSON.parse(raw);
         this.debugLog?.("\u2193", parsed);
         if (parsed.type === "auth.ok") {
-          this.debugLog?.("authentification OK");
+          this.debugLog?.(t("debugAuthOk"));
           this.onStatusChange?.("connected");
           return;
         }
@@ -189,7 +356,7 @@ var WebSocketClient = class {
           window.clearTimeout(pending.timeout);
           this.pendingRequests.delete(parsed.id);
           if (parsed.ok === false) {
-            pending.reject(new Error(typeof parsed.error === "string" ? parsed.error : "Erreur inconnue"));
+            pending.reject(new Error(typeof parsed.error === "string" ? parsed.error : t("errUnknown")));
             return;
           }
           pending.resolve(parsed);
@@ -201,7 +368,7 @@ var WebSocketClient = class {
         ws.send(JSON.stringify(response));
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        new import_obsidian2.Notice(`GTC-Sync : erreur de traitement du message \u2014 ${message}`, 8e3);
+        new import_obsidian2.Notice(t("noticeMessageError", { message }), 8e3);
         ws.send(JSON.stringify({ id: "unknown", ok: false, error: message }));
       }
     };
@@ -210,7 +377,7 @@ var WebSocketClient = class {
     };
     ws.onclose = () => {
       console.warn("[WS] connexion ferm\xE9e");
-      this.rejectPendingRequests("Connexion WebSocket ferm\xE9e");
+      this.rejectPendingRequests(t("errWsConnClosed"));
       if (this.sessionReplaced) {
         this.onStatusChange?.("disconnected");
         this.onSessionReplaced?.();
@@ -218,7 +385,7 @@ var WebSocketClient = class {
       }
       this.onStatusChange?.("disconnected");
       if (this.running) {
-        this.debugLog?.("reconnexion dans 3 s");
+        this.debugLog?.(t("debugReconnecting"));
         this.reconnectTimer = window.setTimeout(() => this.connect(), 3e3);
       }
     };
@@ -239,27 +406,27 @@ var WebSocketClient = class {
   async getNoteId() {
     const response = await this.request("note.getId");
     if (typeof response !== "object" || response === null) {
-      throw new Error("R\xE9ponse invalide pour note.getId");
+      throw new Error(t("errInvalidResponseGetId"));
     }
     const result = response.result;
     if (typeof result !== "object" || result === null) {
-      throw new Error("R\xE9sultat invalide pour note.getId");
+      throw new Error(t("errInvalidResultGetId"));
     }
     const idNote = result.idNote;
     if (typeof idNote !== "string" || !idNote.trim()) {
-      throw new Error("idNote manquant dans la r\xE9ponse");
+      throw new Error(t("errMissingIdNote"));
     }
     return idNote;
   }
   async request(type, payload) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      throw new Error("WebSocket non connect\xE9");
+      throw new Error(t("errWsNotConnected"));
     }
     const id = this.generateRequestId();
     return new Promise((resolve, reject) => {
       const timeout = window.setTimeout(() => {
         this.pendingRequests.delete(id);
-        reject(new Error(`Timeout en attente de r\xE9ponse pour ${type}`));
+        reject(new Error(t("errWsTimeout", { type })));
       }, 1e4);
       const message = { id, type, ...payload ?? {} };
       this.pendingRequests.set(id, { resolve, reject, timeout });
@@ -269,48 +436,48 @@ var WebSocketClient = class {
   }
   parseCommand(value) {
     if (typeof value !== "object" || value === null) {
-      throw new Error("Message invalide: objet attendu");
+      throw new Error(t("errInvalidMessage"));
     }
     const obj = value;
     if (typeof obj.id !== "string") {
-      throw new Error("Message invalide: id manquant");
+      throw new Error(t("errMissingId"));
     }
     if (obj.type === "check") {
       return { id: obj.id, type: "check" };
     }
     if (obj.type === "note.read") {
-      if (typeof obj.path !== "string") throw new Error("note.read: path manquant");
+      if (typeof obj.path !== "string") throw new Error(t("errMissingPath", { type: "note.read" }));
       return { id: obj.id, type: "note.read", path: obj.path };
     }
     if (obj.type === "note.create") {
-      if (typeof obj.path !== "string") throw new Error("note.create: path manquant");
-      if (!Array.isArray(obj.content)) throw new Error("note.create: content manquant");
+      if (typeof obj.path !== "string") throw new Error(t("errMissingPath", { type: "note.create" }));
+      if (!Array.isArray(obj.content)) throw new Error(t("errMissingContent", { type: "note.create" }));
       return { id: obj.id, type: "note.create", path: obj.path, content: obj.content };
     }
     if (obj.type === "note.replace") {
-      if (typeof obj.path !== "string") throw new Error("note.replace: path manquant");
-      if (!Array.isArray(obj.content)) throw new Error("note.replace: content manquant");
+      if (typeof obj.path !== "string") throw new Error(t("errMissingPath", { type: "note.replace" }));
+      if (!Array.isArray(obj.content)) throw new Error(t("errMissingContent", { type: "note.replace" }));
       return { id: obj.id, type: "note.replace", path: obj.path, content: obj.content };
     }
     if (obj.type === "note.move") {
       if (typeof obj.path !== "string" || typeof obj.newPath !== "string") {
-        throw new Error("note.move: path manquant");
+        throw new Error(t("errMissingPath", { type: "note.move" }));
       }
       return { id: obj.id, type: "note.move", path: obj.path, newPath: obj.newPath };
     }
     if (obj.type === "note.findByProperty") {
-      if (typeof obj.property !== "string") throw new Error("note.findByProperty: property manquant");
+      if (typeof obj.property !== "string") throw new Error(t("errMissingProperty"));
       const val = obj.value;
       if (typeof val !== "string" && typeof val !== "number" && typeof val !== "boolean") {
-        throw new Error("note.findByProperty: value invalide");
+        throw new Error(t("errInvalidValue"));
       }
       return { id: obj.id, type: "note.findByProperty", property: obj.property, value: val };
     }
     if (obj.type === "note.open") {
-      if (typeof obj.path !== "string") throw new Error("note.open: path manquant");
+      if (typeof obj.path !== "string") throw new Error(t("errMissingPath", { type: "note.open" }));
       return { id: obj.id, type: "note.open", path: obj.path };
     }
-    throw new Error(`Type de commande inconnu: ${String(obj.type)}`);
+    throw new Error(t("errUnknownCommand", { type: String(obj.type) }));
   }
   async executeCommand(command) {
     try {
@@ -351,7 +518,7 @@ var WebSocketClient = class {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new import_obsidian2.Notice(`GTC-Sync : \xE9chec de ${command.type} \u2014 ${message}`, 8e3);
+      new import_obsidian2.Notice(t("noticeCommandFailed", { type: command.type, message }), 8e3);
       return { id: command.id, ok: false, error: message };
     }
   }
@@ -438,10 +605,10 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
       "auth-error": "shield-off"
     };
     const tooltips = {
-      connecting: "GTC-Sync : Connexion en cours\u2026",
-      connected: "GTC-Sync : Connect\xE9",
-      disconnected: "GTC-Sync : D\xE9connect\xE9 (reconnexion auto)",
-      "auth-error": "GTC-Sync : Erreur d'authentification"
+      connecting: t("statusConnecting"),
+      connected: t("statusConnected"),
+      disconnected: t("statusDisconnected"),
+      "auth-error": t("statusAuthError")
     };
     this.statusBarEl.setText("GTC-Sync : \u25CF");
     this.statusBarEl.title = tooltips[status];
@@ -456,11 +623,11 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
     this.disconnectedModalOpen = true;
     new AlertModal(
       this.app,
-      "GTC-Sync : D\xE9connect\xE9",
-      "Le plugin n'est pas connect\xE9 au serveur GTC-Sync.\nLes modifications ne seront pas synchronis\xE9es.",
+      t("modalDisconnectedTitle"),
+      t("modalDisconnectedMessage"),
       "warning",
       {
-        label: "Reconnecter",
+        label: t("btnReconnect"),
         onClick: () => this.startWebSocket()
       },
       () => {
@@ -471,11 +638,11 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
   onSessionReplaced() {
     new AlertModal(
       this.app,
-      "GTC-Sync : Attention",
-      "La connexion a \xE9t\xE9 ferm\xE9e car une autre session GTC-Sync vient de se connecter.",
+      t("modalSessionReplacedTitle"),
+      t("modalSessionReplacedMessage"),
       "warning",
       {
-        label: "Reconnecter",
+        label: t("btnReconnect"),
         onClick: () => this.startWebSocket()
       }
     ).open();
@@ -485,18 +652,18 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
     this.vaultApi = new VaultApi(this.app);
     this.statusBarEl = this.addStatusBarItem();
     this.statusBarEl.addClass("gtc-sync-status");
-    this.ribbonStatusEl = this.addRibbonIcon("wifi-off", "GTC-Sync : D\xE9connect\xE9 (reconnexion auto)", () => {
+    this.ribbonStatusEl = this.addRibbonIcon("wifi-off", t("statusDisconnected"), () => {
     });
     this.ribbonStatusEl.addClass("gtc-sync-ribbon-status");
     this.setConnectionStatus("disconnected");
     this.addSettingTab(new GTCSyncPluginSettingTab(this.app, this));
-    this.addRibbonIcon("square-pen", "Cr\xE9er une note rapide", async () => {
+    this.addRibbonIcon("square-pen", t("ribbonQuickNote"), async () => {
       await this.createQuickNote();
     });
     this.registerEvent(
       this.app.workspace.on("file-menu", (menu, file) => {
         menu.addItem((item) => {
-          item.setTitle("Cr\xE9er une note rapide").setIcon("square-pen").onClick(async () => {
+          item.setTitle(t("menuCreateQuickNote")).setIcon("square-pen").onClick(async () => {
             await this.createQuickNote(file);
           });
         });
@@ -505,7 +672,7 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
     this.registerEvent(
       this.app.workspace.on("file-menu", (menu, file) => {
         menu.addItem((item) => {
-          item.setTitle("Envoyer dans note rapide").setIcon("send").onClick(async () => {
+          item.setTitle(t("menuSendToQuickNote")).setIcon("send").onClick(async () => {
             await this.sendToQuickNote(file);
           });
         });
@@ -556,25 +723,25 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
     );
     this.addCommand({
       id: "create-quick-note",
-      name: "Cr\xE9er une note rapide",
+      name: t("cmdCreateQuickNote"),
       callback: async () => {
         await this.createQuickNote();
       }
     });
     this.addCommand({
       id: "connect-websocket",
-      name: "Connect WebSocket",
+      name: t("cmdConnectWebSocket"),
       callback: async () => {
         await this.startWebSocket();
-        new import_obsidian4.Notice("WebSocket connect\xE9");
+        new import_obsidian4.Notice(t("noticeWsConnected"));
       }
     });
     this.addCommand({
       id: "disconnect-websocket",
-      name: "Disconnect WebSocket",
+      name: t("cmdDisconnectWebSocket"),
       callback: async () => {
         await this.stopWebSocket();
-        new import_obsidian4.Notice("WebSocket d\xE9connect\xE9");
+        new import_obsidian4.Notice(t("noticeWsDisconnected"));
       }
     });
     if (this.settings.autoConnect) {
@@ -594,20 +761,20 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
     try {
       if (!(target instanceof import_obsidian4.TFile)) return;
       if (!this.wsClient) {
-        throw new Error("WebSocket non initialis\xE9");
+        throw new Error(t("errWsNotInit"));
       }
       const idNote = await this.wsClient.getNoteId();
       await this.setFrontmatterProperty(target, "IdNote", idNote);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new import_obsidian4.Notice(`Impossible de synchroniser la note rapide : ${message}`, 8e3);
+      new import_obsidian4.Notice(t("noticeSendToQuickNoteFailed", { message }), 8e3);
       console.error("[GTCSyncPlugin] sendToQuickNote error:", error);
     }
   }
   async createQuickNote(target) {
     try {
       if (!this.wsClient) {
-        throw new Error("WebSocket non initialis\xE9");
+        throw new Error(t("errWsNotInit"));
       }
       const idNote = await this.wsClient.getNoteId();
       const folderPath = this.resolveQuickNoteFolder(target);
@@ -619,11 +786,11 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
         this.wsClient?.updatingFiles.remove(fullPath);
       }, 2e3);
       const createdFile = await this.app.vault.create(fullPath, content);
-      new import_obsidian4.Notice(`Note rapide cr\xE9\xE9e : ${createdFile.path}`);
+      new import_obsidian4.Notice(t("noticeQuickNoteCreated", { path: createdFile.path }));
       await this.app.workspace.getLeaf(true).openFile(createdFile);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new import_obsidian4.Notice(`Impossible de cr\xE9er la note rapide : ${message}`, 8e3);
+      new import_obsidian4.Notice(t("noticeQuickNoteFailed", { message }), 8e3);
       console.error("[GTCSyncPlugin] createQuickNote error:", error);
     }
   }
@@ -673,33 +840,43 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
       });
       this.debugLog("note.saved \u2190", response);
       if (typeof response !== "object" || response === null) {
-        throw new Error("R\xE9ponse invalide pour note.saved");
+        throw new Error(t("errInvalidResponseSave"));
       }
       const result = response.result;
       if (typeof result !== "object" || result === null) {
-        throw new Error("R\xE9sultat invalide pour note.saved");
+        throw new Error(t("errInvalidResultSave"));
       }
       const resultObj = result;
       if (resultObj.Type === "Error") {
-        if (String(resultObj.Code) === "74") {
-          new AlertModal(
-            this.app,
-            "GTC-Sync : Attention",
-            "La note est r\xE9serv\xE9e par un autre utilisateur,\nles modifications peuvent \xEAtre perdues !"
-          ).open();
-        } else {
-          new AlertModal(
-            this.app,
-            "GTC-Sync : Attention",
-            "Erreur " + String(resultObj.Code) + " : " + String(resultObj.Message ?? "")
-          ).open();
+        this.debugLog("note.saved \u2190", resultObj);
+        switch (String(resultObj.Code)) {
+          case "74":
+            new AlertModal(
+              this.app,
+              t("modalSaveErrorTitle"),
+              t("modalNoteReservedMessage")
+            ).open();
+            break;
+          case "78":
+            new AlertModal(
+              this.app,
+              t("modalSaveErrorTitle"),
+              t("modalNoteUnexistingMessage")
+            ).open();
+            break;
+          default:
+            new AlertModal(
+              this.app,
+              t("modalSaveErrorTitle"),
+              t("modalErrorMessage", { code: String(resultObj.Code), message: String(resultObj.Message ?? "") })
+            ).open();
         }
         return;
       }
-      new import_obsidian4.Notice("La note a \xE9t\xE9 synchronis\xE9e.");
+      new import_obsidian4.Notice(t("noteSynced"));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new import_obsidian4.Notice(`GTC-Sync : \xE9chec de la synchronisation \u2014 ${message}`, 8e3);
+      new import_obsidian4.Notice(t("noticeSyncFailed", { message }), 8e3);
       console.error("[GTCSyncPlugin] Erreur handleFileModified:", error);
     }
   }
@@ -741,27 +918,27 @@ var GTCSyncPluginSettingTab = class extends import_obsidian4.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian4.Setting(containerEl).setName("WebSocket URL").setDesc("Adresse du serveur WebSocket").addText(
+    new import_obsidian4.Setting(containerEl).setName(t("settingsUrlName")).setDesc(t("settingsUrlDesc")).addText(
       (text) => text.setPlaceholder("ws://127.0.0.1:8080").setValue(this.plugin.settings.websocketUrl).onChange(async (value) => {
         this.plugin.settings.websocketUrl = value;
         await this.plugin.saveSettings();
         await this.plugin.restartWebSocket();
       })
     );
-    new import_obsidian4.Setting(containerEl).setName("WebSocket token").setDesc("Token envoy\xE9 au serveur apr\xE8s connexion").addText(
+    new import_obsidian4.Setting(containerEl).setName(t("settingsTokenName")).setDesc(t("settingsTokenDesc")).addText(
       (text) => text.setPlaceholder("token").setValue(this.plugin.settings.websocketToken).onChange(async (value) => {
         this.plugin.settings.websocketToken = value;
         await this.plugin.saveSettings();
         await this.plugin.restartWebSocket();
       })
     );
-    new import_obsidian4.Setting(containerEl).setName("Auto connect").setDesc("Se reconnecter automatiquement au chargement du plugin").addToggle(
+    new import_obsidian4.Setting(containerEl).setName(t("settingsAutoConnectName")).setDesc(t("settingsAutoConnectDesc")).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.autoConnect).onChange(async (value) => {
         this.plugin.settings.autoConnect = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian4.Setting(containerEl).setName("Mode debug").setDesc("Affiche les logs d\xE9taill\xE9s dans la console du d\xE9veloppeur (F12)").addToggle(
+    new import_obsidian4.Setting(containerEl).setName(t("settingsDebugName")).setDesc(t("settingsDebugDesc")).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.debug).onChange(async (value) => {
         this.plugin.settings.debug = value;
         await this.plugin.saveSettings();

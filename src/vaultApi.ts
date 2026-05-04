@@ -1,4 +1,5 @@
 import { App, CachedMetadata, TFile } from "obsidian";
+import { t } from "./i18n";
 
 export class VaultApi {
     constructor(private app: App) { }
@@ -7,7 +8,7 @@ export class VaultApi {
         const file = this.app.vault.getAbstractFileByPath(path);
 
         if (!(file instanceof TFile)) {
-            throw new Error(`Fichier introuvable: ${path}`);
+            throw new Error(t("errFileNotFound", { path }));
         }
 
         return file;
@@ -40,7 +41,7 @@ export class VaultApi {
 
     async createNote(path: string, content: string[]): Promise<{ path: string }> {
         if (this.app.vault.getAbstractFileByPath(path)) {
-            throw new Error(`Le fichier existe déjà: ${path}`);
+            throw new Error(t("errFileAlreadyExists", { path }));
         }
 
         await this.app.vault.create(path, this.clearText(content.join("\n")));
@@ -63,7 +64,7 @@ export class VaultApi {
         const normalizedName = name.trim().toLowerCase();
 
         if (!normalizedName) {
-            throw new Error("Nom de note vide");
+            throw new Error(t("errEmptyNoteName"));
         }
 
         const matches = this.app.vault.getMarkdownFiles().filter((f) => {
@@ -74,13 +75,11 @@ export class VaultApi {
         });
 
         if (matches.length === 0) {
-            throw new Error(`Note introuvable: ${name}`);
+            throw new Error(t("errNoteNotFound", { name }));
         }
 
         if (matches.length > 1) {
-            throw new Error(
-                `Plusieurs notes portent ce nom: ${name} (${matches.map((f) => f.path).join(", ")})`,
-            );
+            throw new Error(t("errMultipleNotes", { name, paths: matches.map((f) => f.path).join(", ") }));
         }
 
         await this.app.workspace.getLeaf(true).openFile(matches[0]);
