@@ -257,7 +257,7 @@ var VaultApi = class {
     await this.app.workspace.getLeaf(true).openFile(matches[0]);
     return { path: matches[0].path };
   }
-  async findByProperty(property, value) {
+  findByProperty(property, value) {
     for (const file of this.app.vault.getMarkdownFiles()) {
       const cache = this.app.metadataCache.getFileCache(file);
       const frontmatter = cache?.frontmatter;
@@ -507,7 +507,7 @@ var WebSocketClient = class {
           return { id: command.id, ok: true, result };
         }
         case "note.findByProperty": {
-          const result = await this.vaultApi.findByProperty(command.property, command.value);
+          const result = this.vaultApi.findByProperty(command.property, command.value);
           if (!result) return { id: command.id, ok: false, error: "Not found" };
           return { id: command.id, ok: true, result };
         }
@@ -592,7 +592,8 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
     this.disconnectedModalOpen = false;
   }
   debugLog(...args) {
-    if (this.settings.debug) console.log("[GTC-Sync]", ...args);
+    if (this.settings.debug)
+      console.error("[GTC-Sync]", ...args);
   }
   setConnectionStatus(status) {
     if (status === "disconnected" && this.currentStatus === "auth-error") {
@@ -610,7 +611,7 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
       disconnected: t("statusDisconnected"),
       "auth-error": t("statusAuthError")
     };
-    this.statusBarEl.setText("GTC-Sync : \u25CF");
+    this.statusBarEl.setText("Gtc Sync : \u25CF");
     this.statusBarEl.title = tooltips[status];
     this.statusBarEl.setAttribute("data-gtc-status", status);
     (0, import_obsidian4.setIcon)(this.ribbonStatusEl, icons[status]);
@@ -648,7 +649,7 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
     ).open();
   }
   async onload() {
-    await this.loadSettings();
+    this.loadSettings();
     this.vaultApi = new VaultApi(this.app);
     this.statusBarEl = this.addStatusBarItem();
     this.statusBarEl.addClass("gtc-sync-status");
@@ -692,19 +693,21 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
       this.app.vault.on("rename", (file) => {
         if (!(file instanceof import_obsidian4.TFile) || file.extension !== "md") return;
         const serverInitiated = this.wsClient?.updatingFiles.includes(file.path) ?? false;
-        window.setTimeout(async () => {
-          if (!serverInitiated) {
-            await this.handleFileModified(file);
-          }
-          const resolvedLinks = this.app.metadataCache.resolvedLinks;
-          for (const [sourcePath, targets] of Object.entries(resolvedLinks)) {
-            if (!(file.path in targets)) continue;
-            const sourceFile = this.app.vault.getAbstractFileByPath(sourcePath);
-            if (!(sourceFile instanceof import_obsidian4.TFile)) continue;
-            const cache = this.app.metadataCache.getFileCache(sourceFile);
-            if (!cache?.frontmatter?.["IdNote"]) continue;
-            await this.handleFileModified(sourceFile);
-          }
+        window.setTimeout(() => {
+          void (async () => {
+            if (!serverInitiated) {
+              await this.handleFileModified(file);
+            }
+            const resolvedLinks = this.app.metadataCache.resolvedLinks;
+            for (const [sourcePath, targets] of Object.entries(resolvedLinks)) {
+              if (!(file.path in targets)) continue;
+              const sourceFile = this.app.vault.getAbstractFileByPath(sourcePath);
+              if (!(sourceFile instanceof import_obsidian4.TFile)) continue;
+              const cache = this.app.metadataCache.getFileCache(sourceFile);
+              if (!cache?.frontmatter?.["IdNote"]) continue;
+              await this.handleFileModified(sourceFile);
+            }
+          })();
         }, 500);
       })
     );
@@ -715,9 +718,9 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
         if (!activeFile || activeFile.path !== file.path) return;
         if (this.wsClient?.updatingFiles.includes(file.path)) return;
         if (this.activeFileTimer !== null) window.clearTimeout(this.activeFileTimer);
-        this.activeFileTimer = window.setTimeout(async () => {
+        this.activeFileTimer = window.setTimeout(() => {
           this.activeFileTimer = null;
-          await this.handleFileModified(file);
+          void this.handleFileModified(file);
         }, 1e3);
       })
     );
@@ -748,9 +751,9 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
       await this.startWebSocket();
     }
   }
-  async onunload() {
+  onunload() {
     if (this.activeFileTimer !== null) window.clearTimeout(this.activeFileTimer);
-    await this.stopWebSocket();
+    void this.stopWebSocket();
   }
   async setFrontmatterProperty(file, key, value) {
     await this.app.fileManager.processFrontMatter(file, (fm) => {
@@ -868,7 +871,7 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
             new AlertModal(
               this.app,
               t("modalSaveErrorTitle"),
-              t("modalErrorMessage", { code: String(resultObj.Code), message: String(resultObj.Message ?? "") })
+              t("modalErrorMessage", { code: String(resultObj.Code), message: typeof resultObj.Message === "string" ? resultObj.Message : "" })
             ).open();
         }
         return;
@@ -902,11 +905,11 @@ var GTCSyncPlugin = class extends import_obsidian4.Plugin {
       this.wsClient = null;
     }
   }
-  async loadSettings() {
+  loadSettings() {
     const localData = this.app.loadLocalStorage(LOCAL_SETTINGS_KEY);
     this.settings = Object.assign({}, DEFAULT_SETTINGS, localData ?? {});
   }
-  async saveSettings() {
+  saveSettings() {
     this.app.saveLocalStorage(LOCAL_SETTINGS_KEY, this.settings);
   }
 };
@@ -921,27 +924,27 @@ var GTCSyncPluginSettingTab = class extends import_obsidian4.PluginSettingTab {
     new import_obsidian4.Setting(containerEl).setName(t("settingsUrlName")).setDesc(t("settingsUrlDesc")).addText(
       (text) => text.setPlaceholder("ws://127.0.0.1:8080").setValue(this.plugin.settings.websocketUrl).onChange(async (value) => {
         this.plugin.settings.websocketUrl = value;
-        await this.plugin.saveSettings();
+        this.plugin.saveSettings();
         await this.plugin.restartWebSocket();
       })
     );
     new import_obsidian4.Setting(containerEl).setName(t("settingsTokenName")).setDesc(t("settingsTokenDesc")).addText(
-      (text) => text.setPlaceholder("token").setValue(this.plugin.settings.websocketToken).onChange(async (value) => {
+      (text) => text.setPlaceholder("Token").setValue(this.plugin.settings.websocketToken).onChange(async (value) => {
         this.plugin.settings.websocketToken = value;
-        await this.plugin.saveSettings();
+        this.plugin.saveSettings();
         await this.plugin.restartWebSocket();
       })
     );
     new import_obsidian4.Setting(containerEl).setName(t("settingsAutoConnectName")).setDesc(t("settingsAutoConnectDesc")).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.autoConnect).onChange(async (value) => {
         this.plugin.settings.autoConnect = value;
-        await this.plugin.saveSettings();
+        this.plugin.saveSettings();
       })
     );
     new import_obsidian4.Setting(containerEl).setName(t("settingsDebugName")).setDesc(t("settingsDebugDesc")).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.debug).onChange(async (value) => {
         this.plugin.settings.debug = value;
-        await this.plugin.saveSettings();
+        this.plugin.saveSettings();
       })
     );
   }

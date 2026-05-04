@@ -7,7 +7,7 @@ export class AlertModal extends Modal {
     private title: string,
     private message: string,
     private variant: "warning" | "error" = "warning",
-    private action?: { label: string; onClick: () => void },
+    private action?: { label: string; onClick: () => unknown },
     private onCloseCallback?: () => void,
   ) {
     super(app);

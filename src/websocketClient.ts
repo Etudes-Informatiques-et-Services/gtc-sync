@@ -1,7 +1,6 @@
 import { VaultApi } from "./vaultApi";
 import { CommandRequest, CommandResponse } from "./types";
 import { Notice, App } from "obsidian";
-import { AlertModal } from "./alertModal";
 import { t } from "./i18n";
 
 export type ConnectionStatus = "connecting" | "connected" | "disconnected" | "auth-error";
@@ -38,13 +37,13 @@ export class WebSocketClient {
     private debugLog?: (...args: unknown[]) => void,
   ) { }
 
-  async start(): Promise<void> {
+  start() {
     this.running = true;
     this.sessionReplaced = false;
     this.connect();
   }
 
-  async stop(): Promise<void> {
+  stop() {
     this.running = false;
 
     if (this.reconnectTimer !== null) {
@@ -301,7 +300,7 @@ export class WebSocketClient {
         }
 
         case "note.findByProperty": {
-          const result = await this.vaultApi.findByProperty(command.property, command.value);
+          const result = this.vaultApi.findByProperty(command.property, command.value);
           if (!result) return { id: command.id, ok: false, error: "Not found" };
           return { id: command.id, ok: true, result };
         }

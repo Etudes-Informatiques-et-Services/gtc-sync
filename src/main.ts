@@ -35,7 +35,8 @@ export default class GTCSyncPlugin extends Plugin {
   private disconnectedModalOpen = false;
 
   private debugLog(...args: unknown[]): void {
-    if (this.settings.debug) console.log("[GTC-Sync]", ...args);
+    if (this.settings.debug)
+      console.error("[GTC-Sync]", ...args);
   }
 
   setConnectionStatus(status: ConnectionStatus): void {
@@ -57,7 +58,7 @@ export default class GTCSyncPlugin extends Plugin {
       "auth-error": t("statusAuthError"),
     };
 
-    this.statusBarEl.setText("GTC-Sync : ●");
+    this.statusBarEl.setText("Gtc Sync : ●");
     this.statusBarEl.title = tooltips[status];
     this.statusBarEl.setAttribute("data-gtc-status", status);
 
@@ -99,7 +100,7 @@ export default class GTCSyncPlugin extends Plugin {
   }
 
   async onload() {
-    await this.loadSettings();
+    this.loadSettings();
 
     this.vaultApi = new VaultApi(this.app);
 
@@ -163,21 +164,23 @@ export default class GTCSyncPlugin extends Plugin {
         const serverInitiated = this.wsClient?.updatingFiles.includes(file.path) ?? false;
 
         // Délai pour laisser le metadataCache se mettre à jour après le renommage.
-        window.setTimeout(async () => {
-          if (!serverInitiated) {
-            await this.handleFileModified(file);
-          }
+        window.setTimeout(() => {
+          void (async () => {
+            if (!serverInitiated) {
+              await this.handleFileModified(file);
+            }
 
-          // Syncer les fichiers dont les références ont été mises à jour par le renommage.
-          const resolvedLinks = this.app.metadataCache.resolvedLinks;
-          for (const [sourcePath, targets] of Object.entries(resolvedLinks)) {
-            if (!(file.path in targets)) continue;
-            const sourceFile = this.app.vault.getAbstractFileByPath(sourcePath);
-            if (!(sourceFile instanceof TFile)) continue;
-            const cache = this.app.metadataCache.getFileCache(sourceFile);
-            if (!cache?.frontmatter?.["IdNote"]) continue;
-            await this.handleFileModified(sourceFile);
-          }
+            // Syncer les fichiers dont les références ont été mises à jour par le renommage.
+            const resolvedLinks = this.app.metadataCache.resolvedLinks;
+            for (const [sourcePath, targets] of Object.entries(resolvedLinks)) {
+              if (!(file.path in targets)) continue;
+              const sourceFile = this.app.vault.getAbstractFileByPath(sourcePath);
+              if (!(sourceFile instanceof TFile)) continue;
+              const cache = this.app.metadataCache.getFileCache(sourceFile);
+              if (!cache?.frontmatter?.["IdNote"]) continue;
+              await this.handleFileModified(sourceFile);
+            }
+          })();
         }, 500);
       }),
     );
@@ -195,9 +198,9 @@ export default class GTCSyncPlugin extends Plugin {
 
         if (this.activeFileTimer !== null) window.clearTimeout(this.activeFileTimer);
 
-        this.activeFileTimer = window.setTimeout(async () => {
+        this.activeFileTimer = window.setTimeout(() => {
           this.activeFileTimer = null;
-          await this.handleFileModified(file);
+          void this.handleFileModified(file);
         }, 1000);
       }),
     );
@@ -233,9 +236,9 @@ export default class GTCSyncPlugin extends Plugin {
     }
   }
 
-  async onunload() {
+  onunload() {
     if (this.activeFileTimer !== null) window.clearTimeout(this.activeFileTimer);
-    await this.stopWebSocket();
+    void this.stopWebSocket();
   }
 
   private async setFrontmatterProperty(file: TFile, key: string, value: string): Promise<void> {
@@ -375,7 +378,7 @@ export default class GTCSyncPlugin extends Plugin {
             new AlertModal(
               this.app,
               t("modalSaveErrorTitle"),
-              t("modalErrorMessage", { code: String(resultObj.Code), message: String(resultObj.Message ?? "") }),
+              t("modalErrorMessage", { code: String(resultObj.Code), message: typeof resultObj.Message === "string" ? resultObj.Message : "" }),
             ).open();
         }
         return;
@@ -417,12 +420,12 @@ export default class GTCSyncPlugin extends Plugin {
     }
   }
 
-  async loadSettings(): Promise<void> {
+  loadSettings() {
     const localData = this.app.loadLocalStorage(LOCAL_SETTINGS_KEY);
     this.settings = Object.assign({}, DEFAULT_SETTINGS, localData ?? {});
   }
 
-  async saveSettings(): Promise<void> {
+  saveSettings() {
     this.app.saveLocalStorage(LOCAL_SETTINGS_KEY, this.settings);
   }
 }
@@ -448,7 +451,7 @@ class GTCSyncPluginSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.websocketUrl)
           .onChange(async (value) => {
             this.plugin.settings.websocketUrl = value;
-            await this.plugin.saveSettings();
+            this.plugin.saveSettings();
             await this.plugin.restartWebSocket();
           }),
       );
@@ -458,11 +461,11 @@ class GTCSyncPluginSettingTab extends PluginSettingTab {
       .setDesc(t("settingsTokenDesc"))
       .addText((text) =>
         text
-          .setPlaceholder("token")
+          .setPlaceholder("Token")
           .setValue(this.plugin.settings.websocketToken)
           .onChange(async (value) => {
             this.plugin.settings.websocketToken = value;
-            await this.plugin.saveSettings();
+            this.plugin.saveSettings();
             await this.plugin.restartWebSocket();
           }),
       );
@@ -475,7 +478,7 @@ class GTCSyncPluginSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.autoConnect)
           .onChange(async (value) => {
             this.plugin.settings.autoConnect = value;
-            await this.plugin.saveSettings();
+            this.plugin.saveSettings();
           }),
       );
 
@@ -487,7 +490,7 @@ class GTCSyncPluginSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.debug)
           .onChange(async (value) => {
             this.plugin.settings.debug = value;
-            await this.plugin.saveSettings();
+            this.plugin.saveSettings();
           }),
       );
   }

@@ -86,10 +86,10 @@ export class VaultApi {
         return { path: matches[0].path };
     }
 
-    async findByProperty(
+    findByProperty(
         property: string,
         value: string | number | boolean,
-    ): Promise<{ path: string; properties: Record<string, unknown> } | null> {
+    ): { path: string; properties: Record<string, unknown> } | null {
         for (const file of this.app.vault.getMarkdownFiles()) {
             const cache: CachedMetadata | null = this.app.metadataCache.getFileCache(file);
             const frontmatter = cache?.frontmatter;
