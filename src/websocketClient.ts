@@ -76,22 +76,27 @@ export class WebSocketClient {
     ws.onmessage = async (event: MessageEvent) => {
       try {
         const raw = typeof event.data === "string" ? event.data : String(event.data);
-        const parsed = JSON.parse(raw);
+        const parsed: unknown = JSON.parse(raw);
         this.debugLog?.("↓", parsed);
 
-        if (parsed.type === "auth.ok") {
+        if (typeof parsed !== "object" || parsed === null) {
+          throw new Error(t("errInvalidMessage"));
+        }
+        const msg = parsed as Record<string, unknown>;
+
+        if (msg.type === "auth.ok") {
           this.debugLog?.(t("debugAuthOk"));
           this.onStatusChange?.("connected");
           return;
         }
 
-        if (parsed.type === "auth.error") {
-          console.error("[WS] authentification échouée:", parsed.error);
+        if (msg.type === "auth.error") {
+          console.error("[WS] authentification échouée:", msg.error);
           this.onStatusChange?.("auth-error");
           return;
         }
 
-        if (parsed.type === "session.replaced") {
+        if (msg.type === "session.replaced") {
           console.warn("[WS] session remplacée par une autre connexion");
           this.sessionReplaced = true;
           this.running = false;
@@ -99,22 +104,22 @@ export class WebSocketClient {
         }
 
         // Réponse à une requête initiée par le plugin (pattern request/response via id).
-        if (typeof parsed.id === "string" && this.pendingRequests.has(parsed.id)) {
-          const pending = this.pendingRequests.get(parsed.id)!;
+        if (typeof msg.id === "string" && this.pendingRequests.has(msg.id)) {
+          const pending = this.pendingRequests.get(msg.id)!;
           window.clearTimeout(pending.timeout);
-          this.pendingRequests.delete(parsed.id);
+          this.pendingRequests.delete(msg.id);
 
-          if (parsed.ok === false) {
-            pending.reject(new Error(typeof parsed.error === "string" ? parsed.error : t("errUnknown")));
+          if (msg.ok === false) {
+            pending.reject(new Error(typeof msg.error === "string" ? msg.error : t("errUnknown")));
             return;
           }
 
-          pending.resolve(parsed);
+          pending.resolve(msg);
           return;
         }
 
         // Commande entrante initiée par le serveur.
-        const command = this.parseCommand(parsed);
+        const command = this.parseCommand(msg);
         const response = await this.executeCommand(command);
         this.debugLog?.("↑", response);
         ws.send(JSON.stringify(response));
@@ -168,7 +173,7 @@ export class WebSocketClient {
       modifiedAtMs: number;
     };
   }): Promise<unknown> {
-    return this.request("note.saved", payload as unknown as Record<string, unknown>);
+    return this.request("note.saved", payload);
   }
 
   public async getNoteId(): Promise<string> {
@@ -234,13 +239,13 @@ export class WebSocketClient {
     if (obj.type === "note.create") {
       if (typeof obj.path !== "string") throw new Error(t("errMissingPath", { type: "note.create" }));
       if (!Array.isArray(obj.content)) throw new Error(t("errMissingContent", { type: "note.create" }));
-      return { id: obj.id, type: "note.create", path: obj.path, content: obj.content };
+      return { id: obj.id, type: "note.create", path: obj.path, content: obj.content as string[] };
     }
 
     if (obj.type === "note.replace") {
       if (typeof obj.path !== "string") throw new Error(t("errMissingPath", { type: "note.replace" }));
       if (!Array.isArray(obj.content)) throw new Error(t("errMissingContent", { type: "note.replace" }));
-      return { id: obj.id, type: "note.replace", path: obj.path, content: obj.content };
+      return { id: obj.id, type: "note.replace", path: obj.path, content: obj.content as string[] };
     }
 
     if (obj.type === "note.move") {

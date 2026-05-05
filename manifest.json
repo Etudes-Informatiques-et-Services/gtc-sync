@@ -2,9 +2,9 @@
     "id": "gtc-sync",
     "name": "GTC Sync",
     "version": "1.0.0",
-    "minAppVersion": "1.4.0",
+    "minAppVersion": "1.8.7",
     "description": "Synchronizing notes with GTC.",
     "author": "Kilian Breton (Etudes Informatiques et Services)",
-    "authorUrl": "https://github.com/KilianEIS",
+    "authorUrl": "https://github.com/Etudes-Informatiques-et-Services35",
     "isDesktopOnly": false
   }

@@ -299,12 +299,12 @@ var WebSocketClient = class {
     // Chaque entrée est résolue ou rejetée à réception du message correspondant (même id).
     this.pendingRequests = /* @__PURE__ */ new Map();
   }
-  async start() {
+  start() {
     this.running = true;
     this.sessionReplaced = false;
     this.connect();
   }
-  async stop() {
+  stop() {
     this.running = false;
     if (this.reconnectTimer !== null) {
       window.clearTimeout(this.reconnectTimer);

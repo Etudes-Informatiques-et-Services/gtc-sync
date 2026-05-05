@@ -95,13 +95,13 @@ export class VaultApi {
             const frontmatter = cache?.frontmatter;
             if (!frontmatter) continue;
 
-            const frontmatterValue = frontmatter[property];
+            const frontmatterValue: unknown = frontmatter[property] as unknown;
 
             // Double comparaison pour tolérer les cas où "456" et 456 doivent matcher.
             if (frontmatterValue == value || String(frontmatterValue) === String(value)) {
                 return {
                     path: file.path,
-                    properties: frontmatter as Record<string, unknown>,
+                    properties: frontmatter,
                 };
             }
         }

@@ -58,7 +58,7 @@ export default class GTCSyncPlugin extends Plugin {
       "auth-error": t("statusAuthError"),
     };
 
-    this.statusBarEl.setText("Gtc Sync : ●");
+    this.statusBarEl.setText("Gtc sync : ●");
     this.statusBarEl.title = tooltips[status];
     this.statusBarEl.setAttribute("data-gtc-status", status);
 
@@ -151,7 +151,7 @@ export default class GTCSyncPlugin extends Plugin {
         if (this.currentStatus === "connected") return;
 
         const cache = this.app.metadataCache.getFileCache(file);
-        const idNote = cache?.frontmatter?.["IdNote"];
+        const idNote = cache?.frontmatter?.["IdNote"] as string | undefined;
         if (!idNote) return;
 
         this.showDisconnectedModal();
@@ -216,8 +216,8 @@ export default class GTCSyncPlugin extends Plugin {
     this.addCommand({
       id: "connect-websocket",
       name: t("cmdConnectWebSocket"),
-      callback: async () => {
-        await this.startWebSocket();
+      callback: () => {
+        this.startWebSocket();
         new Notice(t("noticeWsConnected"));
       },
     });
@@ -225,25 +225,25 @@ export default class GTCSyncPlugin extends Plugin {
     this.addCommand({
       id: "disconnect-websocket",
       name: t("cmdDisconnectWebSocket"),
-      callback: async () => {
-        await this.stopWebSocket();
+      callback: () => {
+        this.stopWebSocket();
         new Notice(t("noticeWsDisconnected"));
       },
     });
 
     if (this.settings.autoConnect) {
-      await this.startWebSocket();
+      this.startWebSocket();
     }
   }
 
   onunload() {
     if (this.activeFileTimer !== null) window.clearTimeout(this.activeFileTimer);
-    void this.stopWebSocket();
+    this.stopWebSocket();
   }
 
   private async setFrontmatterProperty(file: TFile, key: string, value: string): Promise<void> {
     await this.app.fileManager.processFrontMatter(file, (fm) => {
-      fm[key] = value;
+      (fm as Record<string, unknown>)[key] = value;
     });
   }
 
@@ -313,9 +313,9 @@ export default class GTCSyncPlugin extends Plugin {
     return `Quick Note ${yyyy}-${mm}-${dd} ${hh}-${mi}-${ss}.md`;
   }
 
-  async restartWebSocket(): Promise<void> {
-    await this.stopWebSocket();
-    await this.startWebSocket();
+  restartWebSocket(){
+    this.stopWebSocket();
+    this.startWebSocket();
   }
 
   private async handleFileModified(file: TAbstractFile): Promise<void> {
@@ -323,7 +323,7 @@ export default class GTCSyncPlugin extends Plugin {
       if (!(file instanceof TFile) || file.extension !== "md") return;
 
       const cache = this.app.metadataCache.getFileCache(file);
-      const IdNote = cache?.frontmatter?.["IdNote"];
+      const IdNote = cache?.frontmatter?.["IdNote"] as string | undefined;
       if (!IdNote) return;
 
       if (this.currentStatus !== "connected") {
@@ -394,9 +394,9 @@ export default class GTCSyncPlugin extends Plugin {
     }
   }
 
-  async startWebSocket(): Promise<void> {
+  startWebSocket() {
     if (this.wsClient) {
-      await this.wsClient.stop();
+      this.wsClient.stop();
       this.wsClient = null;
     }
 
@@ -410,18 +410,18 @@ export default class GTCSyncPlugin extends Plugin {
       (...args) => this.debugLog(...args),
     );
 
-    await this.wsClient.start();
+    this.wsClient.start();
   }
 
-  async stopWebSocket(): Promise<void> {
+  stopWebSocket() {
     if (this.wsClient) {
-      await this.wsClient.stop();
+      this.wsClient.stop();
       this.wsClient = null;
     }
   }
 
   loadSettings() {
-    const localData = this.app.loadLocalStorage(LOCAL_SETTINGS_KEY);
+    const localData = this.app.loadLocalStorage(LOCAL_SETTINGS_KEY) as Partial<GTCSyncSettings> | null;
     this.settings = Object.assign({}, DEFAULT_SETTINGS, localData ?? {});
   }
 
@@ -447,12 +447,13 @@ class GTCSyncPluginSettingTab extends PluginSettingTab {
       .setDesc(t("settingsUrlDesc"))
       .addText((text) =>
         text
+          // eslint-disable-next-line obsidianmd/ui/sentence-case
           .setPlaceholder("ws://127.0.0.1:8080")
           .setValue(this.plugin.settings.websocketUrl)
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.websocketUrl = value;
             this.plugin.saveSettings();
-            await this.plugin.restartWebSocket();
+            this.plugin.restartWebSocket();
           }),
       );
 
@@ -463,10 +464,10 @@ class GTCSyncPluginSettingTab extends PluginSettingTab {
         text
           .setPlaceholder("Token")
           .setValue(this.plugin.settings.websocketToken)
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.websocketToken = value;
             this.plugin.saveSettings();
-            await this.plugin.restartWebSocket();
+            this.plugin.restartWebSocket();
           }),
       );
 
@@ -476,7 +477,7 @@ class GTCSyncPluginSettingTab extends PluginSettingTab {
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.autoConnect)
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.autoConnect = value;
             this.plugin.saveSettings();
           }),
@@ -488,7 +489,7 @@ class GTCSyncPluginSettingTab extends PluginSettingTab {
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.debug)
-          .onChange(async (value) => {
+          .onChange((value) => {
             this.plugin.settings.debug = value;
             this.plugin.saveSettings();
           }),
